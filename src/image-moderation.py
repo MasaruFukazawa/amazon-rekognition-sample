@@ -6,8 +6,12 @@ import boto3
 
 
 def main():
-    """ エントリーポイント
+    """ 
+    S3バケット（amazon-rekognition-sample）の中のimage-moderationフォルダ内の画像を分析する
+    対象画像拡張子 : jpgとpng
     """
+
+    folder = 'image-moderation'
 
     s3 = boto3.resource('s3', region_name=os.environ['AWS_REGION'])
     bucket = s3.Bucket('amazon-rekognition-sample')
@@ -18,7 +22,8 @@ def main():
     # .. バケット内にフォルダがある場合は、そのフォルダ内の画像も検出する
     for obj in bucket.objects.all():
 
-        if obj.key.endswith('.jpg') or obj.key.endswith('.png'):
+        if obj.key.startswith(folder) and (obj.key.endswith('.jpg') or obj.key.endswith('.png')):
+
             print('Image: {}'.format(obj.key))
 
             # aws rekognitionを利用して画像を分析する
@@ -29,17 +34,11 @@ def main():
                         'Name': obj.key
                     }
                 },
-                MinConfidence=50
+                MinConfidence=50 # 指定した最小信頼度以上の精度で検出されたラベルを返す
             )
 
             # 結果を表示する
-            print('Labels:')
-
-            for label in response['ModerationLabels']:
-                print('  - {}'.format(label['Name']))
-                print('    Confidence: {}'.format(label['Confidence']))
-                print('    Parent: {}'.format(label['ParentName']))
-
+            print(response)
             print('----------')
 
 
